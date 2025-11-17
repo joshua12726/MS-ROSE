@@ -1,0 +1,1489 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Delivery App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Added dark theme custom styles and animations */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        }
+        
+        .status-badge {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+        
+        .glass-effect {
+            background: rgba(30, 30, 30, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Added modal styles for decline reason dialog */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reason-option {
+            transition: all 0.2s ease;
+        }
+
+        .reason-option:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .reason-option.selected {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgb(59, 130, 246);
+        }
+    </style>
+</head>
+<body class="bg-black">
+
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="glass-effect rounded-3xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-700 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 glow-effect">
+                    <i class="fas fa-motorcycle text-white text-3xl"></i>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-2">Rider App</h1>
+                <p class="text-gray-400">Login to start delivering</p>
+            </div>
+            
+            <form id="loginForm" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Email or Phone</label>
+                    <input type="text" id="riderEmail" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Enter your email or phone" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Password</label>
+                    <input type="password" id="riderPassword" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-500/30">
+                    Login
+                </button>
+            </form>
+            
+                <div class="text-center mt-6 space-y-3">
+                    <p class="text-sm text-gray-400">
+                        Don't have an account?
+                        <button onclick="showCreateAccount()" class="text-blue-400 font-semibold hover:text-blue-300 transition">
+                            Create Account
+                        </button>
+                    </p>
+                    <p class="text-sm text-gray-400">
+                        <button onclick="showForgotPassword()" class="text-blue-400 font-semibold hover:text-blue-300 transition">
+                            Forgot Password?
+                        </button>
+                    </p>
+                </div>
+            
+            <p class="text-center text-xs text-gray-500 mt-6 bg-zinc-900/50 py-2 px-4 rounded-lg">
+                Demo: Use any email/password to login
+            </p>
+        </div>
+    </div>
+
+    <div id="createAccountScreen" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="glass-effect rounded-3xl shadow-2xl p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <div class="bg-gradient-to-br from-blue-500 to-blue-700 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 glow-effect">
+                    <i class="fas fa-motorcycle text-white text-3xl"></i>
+                </div>
+                <h1 class="text-4xl font-bold text-white mb-2">Create Account</h1>
+                <p class="text-gray-400">Join as a delivery rider</p>
+            </div>
+            
+            <form id="createAccountForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Full Name</label>
+                    <input type="text" id="newRiderName" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Enter your full name">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Email</label>
+                    <input type="email" id="newRiderEmail" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Enter your email">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Phone Number</label>
+                    <input type="tel" id="newRiderPhone" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Enter your phone number">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Password</label>
+                    <input type="password" id="newRiderPassword" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Create a password">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Confirm Password</label>
+                    <input type="password" id="confirmPassword" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Confirm your password">
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-500/30">
+                    Create Account
+                </button>
+            </form>
+            
+            <div class="text-center mt-6">
+                <p class="text-sm text-gray-400">
+                    Already have an account? 
+                    <button onclick="showLogin()" class="text-blue-400 font-semibold hover:text-blue-300 transition">
+                        Login
+                    </button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainApp" class="hidden">
+        <header class="glass-effect sticky top-0 z-10 border-b border-zinc-800">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-700 w-12 h-12 rounded-xl flex items-center justify-center glow-effect">
+                        <i class="fas fa-motorcycle text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-white" id="riderName">Rider Dashboard</h2>
+                        <p class="text-xs text-green-400 flex items-center gap-1">
+                            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                            Online
+                        </p>
+                    </div>
+                </div>
+                <button onclick="logout()" class="text-red-400 hover:text-red-300 transition">
+                    <i class="fas fa-sign-out-alt text-xl"></i>
+                </button>
+            </div>
+        </header>
+
+        <nav class="glass-effect border-b border-zinc-800 sticky top-16 z-10">
+            <div class="max-w-7xl mx-auto px-4 flex">
+                <button onclick="showTab('available')" class="tab-btn flex-1 py-4 text-center font-semibold border-b-2 border-blue-500 text-blue-400" data-tab="available">
+                    <i class="fas fa-list mr-2"></i>Available
+                </button>
+                <button onclick="showTab('active')" class="tab-btn flex-1 py-4 text-center font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition" data-tab="active">
+                    <i class="fas fa-shipping-fast mr-2"></i>Active
+                </button>
+                <button onclick="showTab('history')" class="tab-btn flex-1 py-4 text-center font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition" data-tab="history">
+                    <i class="fas fa-history mr-2"></i>History
+                </button>
+                <button onclick="showTab('earnings')" class="tab-btn flex-1 py-4 text-center font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition" data-tab="earnings">
+                    <i class="fas fa-wallet mr-2"></i>Earnings
+                </button>
+                <button onclick="showTab('profile')" class="tab-btn flex-1 py-4 text-center font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-300 transition" data-tab="profile">
+                    <i class="fas fa-user mr-2"></i>Profile
+                </button>
+            </div>
+        </nav>
+
+    
+        <div id="availableTab" class="tab-content max-w-7xl mx-auto p-4">
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-white">Available Deliveries</h3>
+                <p class="text-sm text-gray-400">Accept orders to start earning</p>
+            </div>
+            
+            <div id="availableOrders" class="space-y-4">
+                 Orders will be dynamically added here 
+            </div>
+        </div>
+
+       
+        <div id="activeTab" class="tab-content hidden max-w-7xl mx-auto p-4">
+            <div id="noActiveDelivery" class="text-center py-16">
+                <i class="fas fa-box-open text-6xl text-zinc-700 mb-4"></i>
+                <p class="text-gray-400 text-lg font-semibold">No active delivery</p>
+                <p class="text-sm text-gray-600">Accept an order to start delivering</p>
+            </div>
+            
+            <div id="activeDelivery" class="hidden">
+                 Active delivery details will be shown here 
+            </div>
+        </div>
+
+    
+        <div id="historyTab" class="tab-content hidden max-w-7xl mx-auto p-4">
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-white">Delivery History</h3>
+                <p class="text-sm text-gray-400">Your completed deliveries</p>
+            </div>
+            
+            <div id="deliveryHistory" class="space-y-3">
+                 History will be dynamically added here 
+            </div>
+        </div>
+
+        <div id="earningsTab" class="tab-content hidden max-w-7xl mx-auto p-4">
+            <div class="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 rounded-3xl p-8 text-white mb-6 shadow-2xl shadow-blue-500/20">
+                <p class="text-sm opacity-90 mb-2 font-medium">Total Earnings</p>
+                <h2 class="text-5xl font-bold mb-6" id="totalEarnings">₱0.00</h2>
+                <div class="grid grid-cols-2 gap-6 text-sm">
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                        <p class="opacity-90 mb-1">Today</p>
+                        <p class="text-2xl font-bold" id="todayEarnings">₱0.00</p>
+                    </div>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+                        <p class="opacity-90 mb-1">This Week</p>
+                        <p class="text-2xl font-bold" id="weekEarnings">₱0.00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-effect rounded-3xl p-6 shadow-xl">
+                <h3 class="font-bold text-white text-xl mb-6">Statistics</h3>
+                <div class="space-y-5">
+                    <div class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl">
+                        <span class="text-gray-400 font-medium">Total Deliveries</span>
+                        <span class="font-bold text-white text-xl" id="totalDeliveries">0</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl">
+                        <span class="text-gray-400 font-medium">Average Rating</span>
+                        <span class="font-bold text-white text-xl">
+                            <i class="fas fa-star text-yellow-400"></i> 4.8
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl">
+                        <span class="text-gray-400 font-medium">Completion Rate</span>
+                        <span class="font-bold text-white text-xl">98%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="profileTab" class="tab-content hidden max-w-7xl mx-auto p-4">
+            <div class="mb-6">
+                <h3 class="text-2xl font-bold text-white">Profile</h3>
+                <p class="text-sm text-gray-400">Manage your rider profile and settings</p>
+            </div>
+
+            <div class="glass-effect rounded-3xl p-6 shadow-xl">
+                <h4 class="font-bold text-white text-xl mb-6 flex items-center gap-2">
+                    <i class="fas fa-user-circle text-blue-400"></i>
+                    Personal Information
+                </h4>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl">
+                        <span class="text-gray-400 font-medium">Name</span>
+                        <span class="font-bold text-white" id="profileName">Loading...</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl">
+                        <span class="text-gray-400 font-medium">Email</span>
+                        <span class="font-bold text-white" id="profileEmail">Loading...</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl">
+                        <span class="text-gray-400 font-medium">Phone</span>
+                        <span class="font-bold text-white" id="profilePhone">Loading...</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl">
+                        <span class="text-gray-400 font-medium">Member Since</span>
+                        <span class="font-bold text-white" id="profileJoined">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-effect rounded-3xl p-6 shadow-xl mt-6">
+                <h4 class="font-bold text-white text-xl mb-6 flex items-center gap-2">
+                    <i class="fas fa-cog text-green-400"></i>
+                    Settings
+                </h4>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl">
+                        <span class="text-gray-400 font-medium">Notifications</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="notificationToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-zinc-900/50 rounded-xl">
+                        <span class="text-gray-400 font-medium">Location Tracking</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="locationToggle" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="declineModal" class="modal-overlay hidden">
+        <div class="modal-content glass-effect rounded-3xl shadow-2xl p-6 w-full max-w-md border border-zinc-800">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Decline Order</h3>
+                <button onclick="closeDeclineModal()" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <p class="text-gray-400 text-sm mb-6">Please select a reason for declining this order:</p>
+
+            <div class="space-y-3 mb-6">
+                <button onclick="selectReason('Too far from my location')" class="reason-option w-full text-left p-4 bg-zinc-900/50 border-2 border-zinc-700 rounded-xl text-white hover:bg-zinc-800 transition">
+                    <i class="fas fa-map-marker-alt mr-3 text-red-400"></i>Too far from my location
+                </button>
+                <button onclick="selectReason('Low delivery fee')" class="reason-option w-full text-left p-4 bg-zinc-900/50 border-2 border-zinc-700 rounded-xl text-white hover:bg-zinc-800 transition">
+                    <i class="fas fa-dollar-sign mr-3 text-yellow-400"></i>Low delivery fee
+                </button>
+                <button onclick="selectReason('Going in opposite direction')" class="reason-option w-full text-left p-4 bg-zinc-900/50 border-2 border-zinc-700 rounded-xl text-white hover:bg-zinc-800 transition">
+                    <i class="fas fa-directions mr-3 text-blue-400"></i>Going in opposite direction
+                </button>
+                <button onclick="selectReason('Taking a break')" class="reason-option w-full text-left p-4 bg-zinc-900/50 border-2 border-zinc-700 rounded-xl text-white hover:bg-zinc-800 transition">
+                    <i class="fas fa-coffee mr-3 text-orange-400"></i>Taking a break
+                </button>
+                <button onclick="selectReason('Order tracking issues')" class="reason-option w-full text-left p-4 bg-zinc-900/50 border-2 border-zinc-700 rounded-xl text-white hover:bg-zinc-800 transition">
+                    <i class="fas fa-route mr-3 text-purple-400"></i>Order tracking issues
+                </button>
+                <button onclick="selectReason('Status update problems')" class="reason-option w-full text-left p-4 bg-zinc-900/50 border-2 border-zinc-700 rounded-xl text-white hover:bg-zinc-800 transition">
+                    <i class="fas fa-sync-alt mr-3 text-cyan-400"></i>Status update problems
+                </button>
+                <button onclick="selectReason('Location logging concerns')" class="reason-option w-full text-left p-4 bg-zinc-900/50 border-2 border-zinc-700 rounded-xl text-white hover:bg-zinc-800 transition">
+                    <i class="fas fa-map-marked-alt mr-3 text-pink-400"></i>Location logging concerns
+                </button>
+                <button onclick="selectReason('Other')" class="reason-option w-full text-left p-4 bg-zinc-900/50 border-2 border-zinc-700 rounded-xl text-white hover:bg-zinc-800 transition">
+                    <i class="fas fa-ellipsis-h mr-3 text-gray-400"></i>Other reason
+                </button>
+            </div>
+
+            <div id="otherReasonInput" class="hidden mb-6">
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Please specify:</label>
+                <textarea id="otherReasonText" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition resize-none" rows="3" placeholder="Enter your reason..."></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeDeclineModal()" class="flex-1 border-2 border-zinc-700 text-gray-400 py-3 rounded-xl font-bold hover:bg-zinc-800 transition">
+                    Cancel
+                </button>
+                <button onclick="confirmDecline()" class="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white py-3 rounded-xl font-bold hover:from-red-700 hover:to-red-800 transition shadow-lg shadow-red-500/30">
+                    Confirm Decline
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="activeDeliveryModal" class="modal-overlay hidden">
+        <div class="modal-content glass-effect rounded-3xl shadow-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-zinc-800">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Active Delivery</h3>
+                <button onclick="closeActiveDeliveryModal()" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div id="activeDeliveryContent">
+                <!-- Active delivery content will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="forgotPasswordModal" class="modal-overlay hidden">
+        <div class="modal-content glass-effect rounded-3xl shadow-2xl p-6 w-full max-w-md border border-zinc-800">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Reset Password</h3>
+                <button onclick="closeForgotPasswordModal()" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <p class="text-gray-400 text-sm mb-6">Enter your email and set a new password.</p>
+
+            <form id="forgotPasswordForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Email Address</label>
+                    <input type="email" id="resetEmail" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Enter your email" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">New Password</label>
+                    <input type="password" id="newPassword" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Enter new password" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-2">Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword" class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500 transition" placeholder="Confirm new password" required>
+                </div>
+                <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-500/30">
+                    Reset Password
+                </button>
+            </form>
+
+            <div class="text-center mt-6">
+                <p class="text-sm text-gray-400">
+                    Remember your password?
+                    <button onclick="closeForgotPasswordModal(); showLogin()" class="text-blue-400 font-semibold hover:text-blue-300 transition">
+                        Back to Login
+                    </button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageModal" class="modal-overlay hidden">
+        <div class="modal-content glass-effect rounded-3xl shadow-2xl p-6 w-full max-w-md border border-zinc-800">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="messageModalTitle" class="text-2xl font-bold text-white">Message</h3>
+                <button onclick="closeMessageModal()" class="text-gray-400 hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <p id="messageModalText" class="text-gray-300 text-center mb-6"></p>
+
+            <div class="flex justify-center">
+                <button onclick="closeMessageModal()" class="bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 px-8 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-500/30">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load orders from localStorage instead of sample data
+        let availableOrdersData = [];
+        let assignedOrdersData = [];
+        let allOrdersData = [];
+        let currentLocation = null;
+        let locationWatchId = null;
+        let notificationPermission = false;
+
+        let activeOrder = null;
+        let deliveryHistory = [];
+        let currentStatus = 'pending';
+        let decliningFromAssigned = false;
+
+        // Initialize app
+        function init() {
+            const isLoggedIn = localStorage.getItem('riderLoggedIn');
+            if (isLoggedIn) {
+                showMainApp();
+                loadData();
+            }
+        }
+
+        function showCreateAccount() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('createAccountScreen').classList.remove('hidden');
+        }
+
+        function showLogin() {
+            document.getElementById('createAccountScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+        }
+
+        function showForgotPassword() {
+            document.getElementById('forgotPasswordModal').classList.remove('hidden');
+        }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.add('hidden');
+            document.getElementById('forgotPasswordForm').reset();
+        }
+
+
+
+        document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('resetEmail').value.trim();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            if (!email) {
+                showMessageModal('Please enter your email address.', 'Validation Error');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessageModal('Please enter a valid email address.', 'Validation Error');
+                return;
+            }
+
+            // Check if account exists
+            const savedAccount = localStorage.getItem('riderAccount_' + email);
+            if (!savedAccount) {
+                showMessageModal('No account found with this email address. Please create an account first.', 'Account Not Found');
+                return;
+            }
+
+            // Validate new password
+            if (!newPassword) {
+                showMessageModal('Please enter a new password.', 'Validation Error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showMessageModal('Password must be at least 6 characters long.', 'Validation Error');
+                return;
+            }
+
+            // Validate password confirmation
+            if (!confirmNewPassword) {
+                showMessageModal('Please confirm your new password.', 'Validation Error');
+                return;
+            }
+
+            if (newPassword !== confirmNewPassword) {
+                showMessageModal('Passwords do not match. Please try again.', 'Validation Error');
+                return;
+            }
+
+            // Update account with new password
+            const account = JSON.parse(savedAccount);
+            account.password = newPassword;
+            localStorage.setItem('riderAccount_' + email, JSON.stringify(account));
+
+            // Show success message
+            showMessageModal('Your password has been successfully reset. You can now log in with your new password.', 'Password Reset');
+            closeForgotPasswordModal();
+        });
+
+        document.getElementById('createAccountForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('newRiderName').value.trim();
+            const email = document.getElementById('newRiderEmail').value.trim();
+            const phone = document.getElementById('newRiderPhone').value.trim();
+            const password = document.getElementById('newRiderPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Validate full name
+            if (!name) {
+                showMessageModal('Please enter your full name.', 'Validation Error');
+                return;
+            }
+
+            if (name.length < 2) {
+                showMessageModal('Full name must be at least 2 characters long.', 'Validation Error');
+                return;
+            }
+
+            // Validate email
+            if (!email) {
+                showMessageModal('Please enter your email address.', 'Validation Error');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showMessageModal('Please enter a valid email address.', 'Validation Error');
+                return;
+            }
+
+            // Check for valid email domains to prevent typos
+            const domain = email.split('@')[1].toLowerCase();
+            const validDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'aol.com', 'protonmail.com'];
+            if (!validDomains.includes(domain)) {
+                showMessageModal('Please use a valid email domain (e.g., gmail.com, yahoo.com, outlook.com).', 'Invalid Email Domain');
+                return;
+            }
+
+            // Check if email already exists
+            const existingAccount = localStorage.getItem('riderAccount_' + email);
+            if (existingAccount) {
+                showMessageModal('An account with this email already exists. Please use a different email or try logging in.', 'Account Exists');
+                return;
+            }
+
+            // Validate phone number
+            if (!phone) {
+                showMessageModal('Please enter your phone number.', 'Validation Error');
+                return;
+            }
+
+            const phoneRegex = /^[\+]?[0-9\-\s\(\)]{10,15}$/;
+            if (!phoneRegex.test(phone)) {
+                showMessageModal('Please enter a valid phone number (10-15 digits).', 'Validation Error');
+                return;
+            }
+
+            // Validate password
+            if (!password) {
+                showMessageModal('Please enter a password.', 'Validation Error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessageModal('Password must be at least 6 characters long.', 'Validation Error');
+                return;
+            }
+
+            // Validate password confirmation
+            if (!confirmPassword) {
+                showMessageModal('Please confirm your password.', 'Validation Error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessageModal('Passwords do not match. Please try again.', 'Validation Error');
+                return;
+            }
+
+            // Save rider account to localStorage
+            const riderAccount = {
+                name: name,
+                email: email,
+                phone: phone,
+                password: password,
+                createdAt: new Date()
+            };
+
+            localStorage.setItem('riderAccount_' + email, JSON.stringify(riderAccount));
+            localStorage.setItem('riderAccountCreated', 'true');
+            localStorage.setItem('riderLoggedIn', 'true');
+            localStorage.setItem('riderEmail', email);
+            localStorage.setItem('riderName', name);
+
+            showMessageModal('Account created successfully! Welcome to the Rider App.', 'Account Created');
+            showMainApp();
+            loadData();
+        });
+
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('riderEmail').value;
+            const password = document.getElementById('riderPassword').value;
+
+            // Check if any rider account has been created on this device
+            const riderAccountCreated = localStorage.getItem('riderAccountCreated');
+            if (!riderAccountCreated) {
+                showMessageModal('Please create a rider account first before logging in.', 'Account Required');
+                return;
+            }
+
+            const savedAccount = localStorage.getItem('riderAccount_' + email);
+            if (savedAccount) {
+                const account = JSON.parse(savedAccount);
+                if (account.password !== password) {
+                    showMessageModal('Incorrect password. Please try again.', 'Login Failed');
+                    return;
+                }
+                localStorage.setItem('riderName', account.name);
+            } else {
+                showMessageModal('No account found with this email. Please create an account first.', 'Account Not Found');
+                return;
+            }
+
+            localStorage.setItem('riderLoggedIn', 'true');
+            localStorage.setItem('riderEmail', email);
+            showMainApp();
+            loadData();
+        });
+
+        function showMainApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('createAccountScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+
+            const name = localStorage.getItem('riderName');
+            const email = localStorage.getItem('riderEmail') || 'Rider';
+            document.getElementById('riderName').textContent = name || email.split('@')[0];
+            loadProfileData();
+            renderAvailableOrders();
+        }
+
+        function logout() {
+            localStorage.removeItem('riderLoggedIn');
+            localStorage.removeItem('riderEmail');
+            localStorage.removeItem('riderName');
+            location.reload();
+        }
+
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('border-blue-500', 'text-blue-400');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+            
+            // Add active state to selected button
+            const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            activeBtn.classList.add('border-blue-500', 'text-blue-400');
+            activeBtn.classList.remove('border-transparent', 'text-gray-500');
+            
+            // Refresh data
+            if (tabName === 'history') {
+                renderHistory();
+            } else if (tabName === 'earnings') {
+                updateEarnings();
+            }
+        }
+
+        // Render available orders
+        function renderAvailableOrders() {
+            const container = document.getElementById('availableOrders');
+
+            // Combine available and assigned orders
+            const allOrders = [
+                ...availableOrdersData.map(order => ({ ...order, isAssigned: false })),
+                ...assignedOrdersData.map(order => ({ ...order, isAssigned: true }))
+            ];
+
+            if (allOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16">
+                        <i class="fas fa-inbox text-6xl text-zinc-700 mb-4"></i>
+                        <p class="text-gray-400 text-lg font-semibold">No available orders</p>
+                        <p class="text-sm text-gray-600">Check back later for new deliveries</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = allOrders.map(order => `
+                <div class="glass-effect rounded-2xl shadow-xl p-6 border border-zinc-800 card-hover ${order.isAssigned ? 'border-orange-500/50' : ''}">
+                    <div class="flex justify-between items-start mb-5">
+                        <div>
+                            <h4 class="font-bold text-white text-xl">${order.restaurant}</h4>
+                            <p class="text-sm text-gray-500">Order #${order.id}</p>
+                            ${order.isAssigned ? '<span class="inline-block px-2 py-1 bg-orange-500/20 text-orange-400 text-xs rounded-full font-semibold mt-1">Assigned to you</span>' : ''}
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-bold text-green-400">₱${order.fee}</p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-route mr-1"></i>${order.distance}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 mb-5">
+                        <div class="flex items-start gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                            <i class="fas fa-store text-blue-400 text-lg mt-1"></i>
+                            <div class="flex-1">
+                                <p class="text-xs text-blue-400 font-semibold mb-1">PICKUP</p>
+                                <p class="text-sm text-gray-300">${order.pickupAddress}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                            <i class="fas fa-map-marker-alt text-red-400 text-lg mt-1"></i>
+                            <div class="flex-1">
+                                <p class="text-xs text-red-400 font-semibold mb-1">DELIVER TO</p>
+                                <p class="text-sm text-white font-medium">${order.customer}</p>
+                                <p class="text-sm text-gray-400">${order.address}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="acceptOrder('${order.id}')" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-500/30">
+                            ${order.isAssigned ? 'Accept Assigned Order' : 'Accept Order'}
+                        </button>
+                        <button onclick="declineOrder('${order.id}', ${order.isAssigned})" class="px-6 border-2 border-zinc-700 text-gray-400 py-3 rounded-xl font-bold hover:bg-zinc-800 hover:border-zinc-600 transition">
+                            Decline
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Accept order
+        function acceptOrder(orderId) {
+            // Check both available and assigned orders
+            let order = availableOrdersData.find(o => o.id === orderId);
+            let fromAssigned = false;
+            if (!order) {
+                order = assignedOrdersData.find(o => o.id === orderId);
+                fromAssigned = true;
+            }
+
+            if (order) {
+                activeOrder = { ...order, status: 'accepted', acceptedAt: new Date() };
+
+                // Remove from the appropriate array
+                if (fromAssigned) {
+                    assignedOrdersData = assignedOrdersData.filter(o => o.id !== orderId);
+                } else {
+                    availableOrdersData = availableOrdersData.filter(o => o.id !== orderId);
+                }
+
+                currentStatus = 'accepted';
+
+                // Update the order status in localStorage to prevent it from reappearing
+                const orders = JSON.parse(localStorage.getItem('quickOrderOrders') || '[]');
+                const orderIndex = orders.findIndex(o => o.orderNumber === orderId);
+                if (orderIndex !== -1) {
+                    orders[orderIndex].status = 'accepted';
+                    localStorage.setItem('quickOrderOrders', JSON.stringify(orders));
+
+                    // Notify admin that rider accepted the assigned order
+                    const adminNotification = {
+                        type: 'rider_accepted',
+                        orderNumber: orderId,
+                        riderEmail: localStorage.getItem('riderEmail'),
+                        timestamp: new Date().toISOString(),
+                        message: `Rider accepted assigned order #${orderId}`
+                    };
+
+                    const existingAdminNotifications = JSON.parse(localStorage.getItem('adminNotifications') || '[]');
+                    existingAdminNotifications.push(adminNotification);
+                    localStorage.setItem('adminNotifications', JSON.stringify(existingAdminNotifications));
+
+                    // Dispatch event for admin dashboard
+                    window.dispatchEvent(new CustomEvent('adminNotification', {
+                        detail: adminNotification
+                    }));
+                }
+
+                renderAvailableOrders();
+                showTab('active');
+                renderActiveDelivery();
+            }
+        }
+
+        // Decline order
+        let pendingDeclineOrderId = null;
+        let selectedDeclineReason = null;
+
+        function declineOrder(orderId, isAssigned = false) {
+            pendingDeclineOrderId = orderId;
+            decliningFromAssigned = isAssigned;
+            document.getElementById('declineModal').classList.remove('hidden');
+        }
+
+        function closeDeclineModal() {
+            document.getElementById('declineModal').classList.add('hidden');
+            document.getElementById('otherReasonInput').classList.add('hidden');
+            document.getElementById('otherReasonText').value = '';
+            pendingDeclineOrderId = null;
+            selectedDeclineReason = null;
+
+            // Remove selected state from all options
+            document.querySelectorAll('.reason-option').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+        }
+
+        function closeActiveDeliveryModal() {
+            document.getElementById('activeDeliveryModal').classList.add('hidden');
+        }
+
+        function showMessageModal(message, title = 'Message') {
+            document.getElementById('messageModalTitle').textContent = title;
+            document.getElementById('messageModalText').textContent = message;
+            document.getElementById('messageModal').classList.remove('hidden');
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').classList.add('hidden');
+        }
+
+        function selectReason(reason) {
+            selectedDeclineReason = reason;
+            
+            // Update visual selection
+            document.querySelectorAll('.reason-option').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.closest('.reason-option').classList.add('selected');
+            
+            // Show/hide other reason input
+            if (reason === 'Other') {
+                document.getElementById('otherReasonInput').classList.remove('hidden');
+            } else {
+                document.getElementById('otherReasonInput').classList.add('hidden');
+            }
+        }
+
+        function confirmDecline() {
+            if (!selectedDeclineReason) {
+                alert('Please select a reason for declining');
+                return;
+            }
+
+            let finalReason = selectedDeclineReason;
+            if (selectedDeclineReason === 'Other') {
+                const otherText = document.getElementById('otherReasonText').value.trim();
+                if (!otherText) {
+                    alert('Please specify your reason');
+                    return;
+                }
+                finalReason = otherText;
+            }
+
+            // Log the decline reason (in production, this would be sent to backend)
+            console.log(`Order ${pendingDeclineOrderId} declined. Reason: ${finalReason}`);
+
+            // Remove the order from the appropriate list
+            if (decliningFromAssigned) {
+                assignedOrdersData = assignedOrdersData.filter(o => o.id !== pendingDeclineOrderId);
+            } else {
+                availableOrdersData = availableOrdersData.filter(o => o.id !== pendingDeclineOrderId);
+            }
+
+            // Update order status in localStorage
+            const orders = JSON.parse(localStorage.getItem('quickOrderOrders') || '[]');
+            const orderIndex = orders.findIndex(o => o.orderNumber === pendingDeclineOrderId);
+            if (orderIndex !== -1) {
+                orders[orderIndex].status = 'declined';
+                orders[orderIndex].declinedReason = finalReason;
+                orders[orderIndex].declinedAt = new Date().toISOString();
+                localStorage.setItem('quickOrderOrders', JSON.stringify(orders));
+            }
+
+            renderAvailableOrders();
+            
+            // Close modal and reset
+            closeDeclineModal();
+            
+            // Show confirmation
+            alert(`Order declined. Reason: ${finalReason}`);
+        }
+
+        // Render active delivery
+        function renderActiveDelivery() {
+            if (!activeOrder) {
+                document.getElementById('noActiveDelivery').classList.remove('hidden');
+                document.getElementById('activeDelivery').classList.add('hidden');
+                return;
+            }
+            
+            document.getElementById('noActiveDelivery').classList.add('hidden');
+            document.getElementById('activeDelivery').classList.remove('hidden');
+            
+            const statusSteps = [
+                { key: 'accepted', label: 'Order Accepted', icon: 'check-circle' },
+                { key: 'picked', label: 'Picked Up', icon: 'box' },
+                { key: 'onway', label: 'On The Way', icon: 'shipping-fast' },
+                { key: 'delivered', label: 'Delivered', icon: 'check-double' }
+            ];
+            
+            const currentStepIndex = statusSteps.findIndex(s => s.key === currentStatus);
+            
+            document.getElementById('activeDelivery').innerHTML = `
+                <div class="glass-effect rounded-3xl shadow-2xl p-6 mb-4 border border-zinc-800">
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white">${activeOrder.restaurant}</h3>
+                            <p class="text-sm text-gray-500">Order #${activeOrder.id}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-4xl font-bold text-green-400">₱${activeOrder.fee}</p>
+                        </div>
+                    </div>
+                    
+                     Status Progress 
+                    <div class="mb-8">
+                        <div class="flex justify-between mb-3">
+                            ${statusSteps.map((step, index) => `
+                                <div class="flex flex-col items-center flex-1">
+                                    <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-2 transition ${
+                                        index <= currentStepIndex 
+                                            ? 'bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-lg shadow-blue-500/30' 
+                                            : 'bg-zinc-800 text-gray-600'
+                                    }">
+                                        <i class="fas fa-${step.icon}"></i>
+                                    </div>
+                                    <p class="text-xs text-center font-medium ${
+                                        index <= currentStepIndex ? 'text-blue-400' : 'text-gray-600'
+                                    }">${step.label}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="relative h-2 bg-zinc-800 rounded-full overflow-hidden">
+                            <div class="absolute h-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500" style="width: ${(currentStepIndex / (statusSteps.length - 1)) * 100}%"></div>
+                        </div>
+                    </div>
+                    
+                     Location Details 
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-start gap-4 p-5 bg-blue-500/10 border border-blue-500/20 rounded-2xl">
+                            <i class="fas fa-store text-blue-400 text-2xl mt-1"></i>
+                            <div class="flex-1">
+                                <p class="text-xs text-blue-400 font-bold mb-1">PICKUP LOCATION</p>
+                                <p class="text-sm font-semibold text-white">${activeOrder.pickupAddress}</p>
+                            </div>
+                            <button onclick="openMap('pickup')" class="text-blue-400 hover:text-blue-300 transition">
+                                <i class="fas fa-directions text-2xl"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex items-start gap-4 p-5 bg-red-500/10 border border-red-500/20 rounded-2xl">
+                            <i class="fas fa-map-marker-alt text-red-400 text-2xl mt-1"></i>
+                            <div class="flex-1">
+                                <p class="text-xs text-red-400 font-bold mb-1">DELIVERY LOCATION</p>
+                                <p class="text-sm font-semibold text-white">${activeOrder.customer}</p>
+                                <p class="text-sm text-gray-400">${activeOrder.address}</p>
+                                ${activeOrder.originalOrder && activeOrder.originalOrder.contactNumber ? `<p class="text-sm text-blue-400 font-medium mt-1"><i class="fas fa-phone mr-1"></i>${activeOrder.originalOrder.contactNumber}</p>` : ''}
+                            </div>
+                            <button onclick="openMap('delivery')" class="text-red-400 hover:text-red-300 transition">
+                                <i class="fas fa-directions text-2xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Order Items Section -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-utensils text-orange-400"></i>
+                            Order Items
+                        </h4>
+                        <div class="space-y-3">
+                            ${activeOrder.originalOrder && activeOrder.originalOrder.items ? activeOrder.originalOrder.items.map(item => `
+                                <div class="flex items-center gap-4 p-4 bg-zinc-900/50 border border-zinc-700 rounded-xl">
+                                    <div class="w-12 h-12 bg-zinc-800 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <img src="${item.image || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjI1IiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiBmaWxsPSIjOTlBM0FGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tk88L3RleHQ+Cjwvc3ZnPg=='}" alt="${item.name}" class="w-full h-full object-cover rounded-lg" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjI1IiB5PSIyNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIiBmaWxsPSIjOTlBM0FGIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+Tk88L3RleHQ+Cjwvc3ZnPg=='">
+                                    </div>
+                                    <div class="flex-1">
+                                        <h5 class="font-semibold text-white text-sm">${item.name}</h5>
+                                        <p class="text-xs text-gray-400">Qty: ${item.quantity} × ₱${item.price.toFixed(2)}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-bold text-green-400">₱${(item.price * item.quantity).toFixed(2)}</p>
+                                    </div>
+                                </div>
+                            `).join('') : '<p class="text-gray-400 text-sm">No items information available</p>'}
+                        </div>
+                    </div>
+                    
+                     Action Buttons
+                    <div class="space-y-3">
+                        ${currentStatus === 'accepted' ? `
+                            <button onclick="updateStatus('picked')" class="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-xl font-bold hover:from-green-700 hover:to-green-800 transition shadow-lg shadow-green-500/30">
+                                <i class="fas fa-box mr-2"></i>Mark as Picked Up
+                            </button>
+                        ` : currentStatus === 'picked' ? `
+                            <button onclick="updateStatus('onway')" class="w-full bg-gradient-to-r from-orange-600 to-orange-700 text-white py-3 rounded-xl font-bold hover:from-orange-700 hover:to-orange-800 transition shadow-lg shadow-orange-500/30">
+                                <i class="fas fa-shipping-fast mr-2"></i>Start Delivery
+                            </button>
+                        ` : currentStatus === 'onway' ? `
+                            <button onclick="updateStatus('delivered')" class="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-bold hover:from-blue-700 hover:to-blue-800 transition shadow-lg shadow-blue-500/30">
+                                <i class="fas fa-check-double mr-2"></i>Mark as Delivered
+                            </button>
+                        ` : ''}
+
+                        <div class="flex gap-3">
+                            <button onclick="openMap('delivery')" class="w-full border-2 border-zinc-700 text-gray-400 py-3 rounded-xl font-bold hover:bg-zinc-800 transition">
+                                <i class="fas fa-map mr-2"></i>Navigate
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Update delivery status
+        function updateStatus(newStatus) {
+            currentStatus = newStatus;
+
+            if (newStatus === 'delivered') {
+                // Complete delivery
+                deliveryHistory.unshift({
+                    ...activeOrder,
+                    completedAt: new Date(),
+                    status: 'completed'
+                });
+
+                // Update order status in main system
+                const orders = JSON.parse(localStorage.getItem('quickOrderOrders') || '[]');
+                const orderIndex = orders.findIndex(order => order.orderNumber === activeOrder.id);
+                if (orderIndex !== -1) {
+                    orders[orderIndex].status = 'delivered';
+                    orders[orderIndex].deliveredAt = new Date().toISOString();
+                    localStorage.setItem('quickOrderOrders', JSON.stringify(orders));
+
+                    // Trigger admin notification for delivered order
+                    const adminNotification = {
+                        type: 'order_delivered',
+                        orderNumber: activeOrder.id,
+                        riderEmail: localStorage.getItem('riderEmail'),
+                        timestamp: new Date().toISOString(),
+                        message: `Order #${activeOrder.id} has been delivered by rider!`
+                    };
+
+                    const existingAdminNotifications = JSON.parse(localStorage.getItem('adminNotifications') || '[]');
+                    existingAdminNotifications.push(adminNotification);
+                    localStorage.setItem('adminNotifications', JSON.stringify(existingAdminNotifications));
+
+                    // Dispatch event for admin dashboard
+                    window.dispatchEvent(new CustomEvent('adminNotification', {
+                        detail: adminNotification
+                    }));
+                }
+
+                activeOrder = null;
+                currentStatus = 'pending';
+                showMessageModal('Delivery completed! ₱' + deliveryHistory[0].fee + ' earned', 'Delivery Complete');
+                showTab('available');
+            } else {
+                // Update order status in main system for intermediate statuses
+                const orders = JSON.parse(localStorage.getItem('quickOrderOrders') || '[]');
+                const orderIndex = orders.findIndex(order => order.orderNumber === activeOrder.id);
+                if (orderIndex !== -1) {
+                    orders[orderIndex].status = newStatus;
+                    orders[orderIndex].statusUpdatedAt = new Date().toISOString();
+                    localStorage.setItem('quickOrderOrders', JSON.stringify(orders));
+                }
+
+                renderActiveDelivery();
+            }
+        }
+
+        // Render history
+        function renderHistory() {
+            const container = document.getElementById('deliveryHistory');
+            
+            if (deliveryHistory.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-16">
+                        <i class="fas fa-history text-6xl text-zinc-700 mb-4"></i>
+                        <p class="text-gray-400 text-lg font-semibold">No delivery history</p>
+                        <p class="text-sm text-gray-600">Your completed deliveries will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = deliveryHistory.map(order => `
+                <div class="glass-effect rounded-2xl shadow-lg p-5 border border-zinc-800">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="font-bold text-white text-lg">${order.restaurant}</h4>
+                            <p class="text-xs text-gray-500">Order #${order.id}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xl font-bold text-green-400">₱${order.fee}</p>
+                            <span class="inline-block px-3 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-semibold border border-green-500/30">Completed</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-300 mb-1 font-medium">${order.customer}</p>
+                    <p class="text-xs text-gray-500">${order.address}</p>
+                    <p class="text-xs text-gray-600 mt-3 flex items-center gap-1">
+                        <i class="far fa-clock"></i>${new Date(order.completedAt).toLocaleString()}
+                    </p>
+                </div>
+            `).join('');
+        }
+
+        // Update earnings
+        function updateEarnings() {
+            const total = deliveryHistory.reduce((sum, order) => sum + order.fee, 0);
+            const today = deliveryHistory.filter(o => {
+                const orderDate = new Date(o.completedAt);
+                const now = new Date();
+                return orderDate.toDateString() === now.toDateString();
+            }).reduce((sum, order) => sum + order.fee, 0);
+            
+            document.getElementById('totalEarnings').textContent = '₱' + total.toFixed(2);
+            document.getElementById('todayEarnings').textContent = '₱' + today.toFixed(2);
+            document.getElementById('weekEarnings').textContent = '₱' + total.toFixed(2);
+            document.getElementById('totalDeliveries').textContent = deliveryHistory.length;
+        }
+
+        // Helper functions
+        function openMap(type) {
+            if (!activeOrder) {
+                alert('No active delivery to navigate to.');
+                return;
+            }
+
+            let destination = '';
+            if (type === 'delivery') {
+                destination = activeOrder.address;
+            } else if (type === 'pickup') {
+                destination = activeOrder.pickupAddress;
+            } else {
+                alert('Invalid navigation type.');
+                return;
+            }
+
+            // Open Google Maps with directions
+            const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+            window.open(mapsUrl, '_blank');
+        }
+
+        function callCustomer() {
+            if (!activeOrder || !activeOrder.originalOrder) {
+                alert('No active delivery to call customer for.');
+                return;
+            }
+
+            const phoneNumber = activeOrder.originalOrder.contactNumber;
+            if (!phoneNumber) {
+                alert('Customer phone number not available.');
+                return;
+            }
+
+            // Initiate phone call using tel: protocol
+            window.location.href = `tel:${phoneNumber}`;
+        }
+
+        function loadData() {
+            // Load saved data from localStorage if available
+            const savedHistory = localStorage.getItem('deliveryHistory');
+            if (savedHistory) {
+                deliveryHistory = JSON.parse(savedHistory);
+            }
+        }
+ 
+        // Save data when page unloads
+        window.addEventListener('beforeunload', function() {
+            localStorage.setItem('deliveryHistory', JSON.stringify(deliveryHistory));
+        });
+
+        // Load orders from localStorage and sync
+        function loadOrdersFromSystem() {
+            const orders = JSON.parse(localStorage.getItem('quickOrderOrders') || '[]');
+            const riderEmail = localStorage.getItem('riderEmail');
+
+            // Check for orders assigned to this rider (for notifications)
+            const newlyAssignedOrders = orders.filter(order =>
+                order.status === 'assigned' &&
+                order.assignedRider === riderEmail &&
+                !activeOrder // Only if no active order
+            );
+
+            // Show notifications for newly assigned orders
+            newlyAssignedOrders.forEach(order => {
+                showNewOrderNotification({
+                    id: order.orderNumber,
+                    distance: '2.5 km'
+                });
+            });
+
+            // Separate assigned orders for this rider
+            assignedOrdersData = orders
+                .filter(order =>
+                    order.status === 'assigned' &&
+                    order.assignedRider === riderEmail
+                )
+                .map(order => ({
+                    id: order.orderNumber,
+                    restaurant: 'QuickOrder Restaurant', // Default restaurant name
+                    customer: 'Customer', // Generic customer name
+                    address: order.deliveryAddress || 'Delivery Address',
+                    distance: '2.5 km', // Default distance
+                    fee: 45, // Default delivery fee
+                    items: order.items ? order.items.length : 1,
+                    pickupAddress: 'Restaurant Location', // Default pickup
+                    originalOrder: order // Keep reference to original order
+                }));
+
+            // Filter orders that are available for delivery (confirmed or preparing status only)
+            availableOrdersData = orders
+                .filter(order => order.status === 'confirmed' || order.status === 'preparing')
+                .map(order => ({
+                    id: order.orderNumber,
+                    restaurant: 'QuickOrder Restaurant', // Default restaurant name
+                    customer: 'Customer', // Generic customer name
+                    address: order.deliveryAddress || 'Delivery Address',
+                    distance: '2.5 km', // Default distance
+                    fee: 45, // Default delivery fee
+                    items: order.items ? order.items.length : 1,
+                    pickupAddress: 'Restaurant Location', // Default pickup
+                    originalOrder: order // Keep reference to original order
+                }));
+
+            allOrdersData = orders; // Keep all orders for reference
+            renderAvailableOrders();
+        }
+
+        // Auto-refresh orders every 30 seconds
+        function startOrderSync() {
+            loadOrdersFromSystem();
+            setInterval(loadOrdersFromSystem, 30000); // Refresh every 30 seconds
+        }
+
+        // Request notification permission
+        function requestNotificationPermission() {
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    notificationPermission = permission === 'granted';
+                    if (notificationPermission) {
+                        console.log('Notification permission granted');
+                    }
+                });
+            }
+        }
+
+        // Show notification for new orders
+        function showNewOrderNotification(order) {
+            if (notificationPermission && 'Notification' in window) {
+                const notification = new Notification('New Delivery Available!', {
+                    body: `Order #${order.id} - ${order.distance} away`,
+                    icon: '/favicon.ico',
+                    badge: '/favicon.ico'
+                });
+
+                notification.onclick = function() {
+                    window.focus();
+                    showTab('available');
+                };
+            }
+        }
+
+        // Initialize GPS tracking
+        function initLocationTracking() {
+            if ('geolocation' in navigator) {
+                // Get initial location
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        currentLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: new Date().toISOString()
+                        };
+                        console.log('Location updated:', currentLocation);
+                    },
+                    error => {
+                        console.warn('Location access denied:', error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000 // 5 minutes
+                    }
+                );
+
+                // Start watching position for real-time updates
+                locationWatchId = navigator.geolocation.watchPosition(
+                    position => {
+                        currentLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude,
+                            accuracy: position.coords.accuracy,
+                            timestamp: new Date().toISOString()
+                        };
+                        console.log('Location updated:', currentLocation);
+
+                        // Save rider location to localStorage for customer tracking
+                        const riderEmail = localStorage.getItem('riderEmail');
+                        if (riderEmail) {
+                            localStorage.setItem('riderLocation_' + riderEmail, JSON.stringify(currentLocation));
+                        }
+                    },
+                    error => {
+                        console.warn('Location tracking error:', error);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 60000 // 1 minute
+                    }
+                );
+            } else {
+                console.warn('Geolocation not supported');
+            }
+        }
+
+        // Stop location tracking
+        function stopLocationTracking() {
+            if (locationWatchId !== null) {
+                navigator.geolocation.clearWatch(locationWatchId);
+                locationWatchId = null;
+            }
+        }
+
+        // Calculate distance between two points (Haversine formula)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Estimate delivery time based on distance
+        function estimateDeliveryTime(distance) {
+            // Assume average speed of 30 km/h in city traffic
+            const speedKmh = 30;
+            const timeHours = distance / speedKmh;
+            const timeMinutes = Math.round(timeHours * 60);
+            return Math.max(timeMinutes, 15); // Minimum 15 minutes
+        }
+
+        // Listen for real-time notifications from admin dashboard
+        window.addEventListener('riderNotification', function(event) {
+            const notification = event.detail;
+            if (notification.riderEmail === localStorage.getItem('riderEmail')) {
+                // Show notification for this rider
+                showNewOrderNotification({
+                    id: notification.orderNumber,
+                    distance: '2.5 km'
+                });
+
+                // Refresh orders to pick up the assigned order
+                loadOrdersFromSystem();
+            }
+        });
+
+        // Load profile data
+        function loadProfileData() {
+            const riderEmail = localStorage.getItem('riderEmail');
+            if (riderEmail) {
+                const account = JSON.parse(localStorage.getItem('riderAccount_' + riderEmail) || '{}');
+                document.getElementById('profileName').textContent = account.name || 'N/A';
+                document.getElementById('profileEmail').textContent = account.email || 'N/A';
+                document.getElementById('profilePhone').textContent = account.phone || 'N/A';
+                document.getElementById('profileJoined').textContent = account.createdAt ? new Date(account.createdAt).toLocaleDateString() : 'N/A';
+            }
+        }
+
+        // Initialize on page load
+        init();
+        requestNotificationPermission();
+        startOrderSync();
+        initLocationTracking();
+    </script>
+</body>
+</html>
